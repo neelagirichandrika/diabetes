@@ -1,0 +1,28 @@
+============================================================
+DIABETES READMISSION — COEFFICIENT REPORT
+============================================================
+Top 10 Risk-Increasing Factors:
+                           Feature  Coefficient  Odds_Ratio
+                  number_inpatient       0.4841      1.6227
+admission_type_Other/Not Available       0.2867      1.3320
+   admission_source_Emergency Room       0.2679      1.3072
+                       age_[70-80)       0.2591      1.2957
+                       age_[80-90)       0.2336      1.2631
+                  number_emergency       0.2003      1.2217
+                       age_[60-70)       0.1964      1.2170
+        primary_diagnosis_Diabetes       0.1681      1.1831
+                  number_diagnoses       0.1533      1.1657
+     primary_diagnosis_Circulatory       0.1370      1.1468
+
+Top 10 Risk-Decreasing Factors:
+                                Feature  Coefficient  Odds_Ratio
+                           metformin_Up      -0.1282      0.8797
+                     max_glu_serum_>200      -0.1333      0.8752
+                         insulin_Steady      -0.1373      0.8717
+                     max_glu_serum_Norm      -0.1397      0.8696
+                         A1Cresult_Norm      -0.1413      0.8683
+                         diabetesMed_No      -0.2258      0.7978
+            primary_diagnosis_Neoplasms      -0.3574      0.6995
+           admission_type_Trauma Center      -0.3973      0.6721
+admission_source_Transfer from Facility      -0.4393      0.6445
+                             age_[0-10)      -0.8250      0.4382

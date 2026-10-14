@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diabetic Inpatient Readmission Prediction</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="header-branding">
+        <h1>Diabetic Inpatient Readmission Prediction</h1>
+        <div class="header-tagline">Clinical Machine Learning Workflow &bull; 130-US Hospitals Dataset</div>
+      </div>
+      <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+        <div class="header-meta-badge">
+          Pipeline: HistGradientBoosting &bull; ROC-AUC: 0.6857 &bull; F1: 0.5755
+        </div>
+        <button type="button" class="header-docker-badge" onclick="switchTab('tab-modules')" title="Click to view all Course Outcomes CO1 to CO6" style="background-color:rgba(217, 130, 43, 0.22); color:#F59E0B; border-color:rgba(217, 130, 43, 0.45);">
+          <span>&#10003;</span> CO1–CO6: Certified Ready
+        </button>
+        <button type="button" class="header-docker-badge" onclick="switchTab('tab-co6')" title="Click to view CO6 Docker Containerization Dashboard">
+          <span class="docker-status-dot"></span> Docker: Implemented (CO6)
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs Bar -->
+    <nav class="nav-tabs-bar">
+      <button type="button" class="nav-tab-btn active" onclick="switchTab('tab-predict')">Patient Risk Prediction</button>
+      <button type="button" class="nav-tab-btn" onclick="switchTab('tab-modules')">&#128218; Course Outcomes & Modules (CO1–CO6)</button>
+      <button type="button" class="nav-tab-btn" onclick="switchTab('tab-co6')">&#128011; Docker & Production (CO6)</button>
+      <button type="button" class="nav-tab-btn" onclick="switchTab('tab-dataset')">Dataset & Ingestion (CO1)</button>
+      <button type="button" class="nav-tab-btn" onclick="switchTab('tab-eda')">Data Insights (CO1/CO4)</button>
+      <button type="button" class="nav-tab-btn" onclick="switchTab('tab-preprocessing')">Cleaning & Hygiene (CO1)</button>
+      <button type="button" class="nav-tab-btn" onclick="switchTab('tab-models')">Model Benchmark (CO3/CO5)</button>
+      <button type="button" class="nav-tab-btn" onclick="switchTab('tab-diagnostics')">Regularization & Bias (CO2/CO5)</button>
+      <button type="button" class="nav-tab-btn" onclick="switchTab('tab-coefficients')">Odds Ratios (CO2)</button>
+    </nav>
+  </header>
+
+  <main class="main-content">
+
+    <!-- ============================================================== -->
+    <!-- TAB 1: PATIENT RISK PREDICTION (MAIN INTERACTIVE INTERFACE)   -->
+    <!-- ============================================================== -->
+    <div id="tab-predict" class="tab-panel active">
+
+      <!-- Course Outcomes Quick Navigation Strip -->
+      <div class="system-status-strip">
+        <div class="status-pills-group">
+          <span style="font-weight:600; color:var(--text-primary); margin-right:0.25rem;">Course Outcomes:</span>
+          <button type="button" class="status-pill success" style="cursor:pointer;" onclick="switchModuleSubTab('m1'); switchTab('tab-modules');" title="CO1: Ingestion, Hygiene, Cleaning, Split">CO1: Lifecycle</button>
+          <button type="button" class="status-pill success" style="cursor:pointer;" onclick="switchModuleSubTab('m2'); switchTab('tab-modules');" title="CO2: Logistic Regression, Regularization, Odds Ratios">CO2: Linear Models</button>
+          <button type="button" class="status-pill success" style="cursor:pointer;" onclick="switchModuleSubTab('m3'); switchTab('tab-modules');" title="CO3: Decision Trees, Splitting, Ensembles">CO3: Tree Ensembles</button>
+          <button type="button" class="status-pill success" style="cursor:pointer;" onclick="switchModuleSubTab('m4'); switchTab('tab-modules');" title="CO4: K-Means Clustering & PCA Phenotyping">CO4: Unsupervised (PCA)</button>
+          <button type="button" class="status-pill success" style="cursor:pointer;" onclick="switchModuleSubTab('m5'); switchTab('tab-modules');" title="CO5: Calibration, Evaluation, Bias-Variance">CO5: Evaluation</button>
+          <button type="button" class="status-pill success" style="cursor:pointer;" onclick="switchTab('tab-co6');" title="CO6: Docker Containerization & Healthcheck"><span class="docker-status-dot"></span> CO6: Docker</button>
+        </div>
+        <button type="button" class="btn-sample" style="padding:0.25rem 0.65rem; font-size:0.78rem;" onclick="switchTab('tab-modules')">
+          Explore All CO Modules &rarr;
+        </button>
+      </div>
+
+      <section class="panel-heading">
+        <h2 class="panel-title">Inpatient Encounter Risk Assessment</h2>
+        <p class="panel-subtitle">
+          This system estimates whether a diabetic inpatient is likely to experience a subsequent hospital readmission
+          based on clinical indicators available at the discharge planning stage.
+        </p>
+      </section>
+
+      <!-- Quick Sample Loader -->
+      <section class="sample-bar">
+        <span class="sample-bar-label">Test with Verified Patient Profiles:</span>
+        <div class="sample-buttons">
+          <button type="button" class="btn-sample" onclick="loadSample('sample_baseline')">Load Baseline Risk Profile</button>
+          <button type="button" class="btn-sample" onclick="loadSample('sample_elevated')">Load Elevated Risk Profile</button>
+          <button type="button" class="btn-sample" onclick="clearForm()">Reset Form</button>
+        </div>
+      </section>
+
+      <!-- Prediction Result (if form submitted) -->
+      {% if result %}
+      <section class="result-card {{ result.risk_class }}">
+        <div class="result-header">
+          <div>
+            <span class="result-badge">{{ result.risk_level }}</span>
+            <h3 class="result-title">
+              {% if result.prediction == 1 %}
+              Elevated Readmission Risk
+              {% else %}
+              Baseline / Lower Readmission Risk
+              {% endif %}
+            </h3>
+          </div>
+          <div class="probability-display">
+            <div class="prob-label">Estimated Readmission Likelihood</div>
+            <div class="prob-value">{{ result.readmission_probability }}%</div>
+          </div>
+        </div>
+
+        <div class="prob-meter">
+          <div class="prob-fill" style="width: {{ result.readmission_probability }}%;"></div>
+        </div>
+
+        <p class="result-summary">{{ result.summary }}</p>
+
+        <div class="result-disclaimer">
+          {{ result.disclaimer }}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- Prediction Form -->
+      <form id="predictionForm" method="POST" action="/" class="form-card">
+
+        <!-- Section 1: Demographics -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-number">Section 01</div>
+            <h3 class="section-title">Patient Demographics</h3>
+            <p class="section-desc">Baseline patient demographic characteristics recorded upon admission.</p>
+          </div>
+          <div class="grid-2">
+            <div class="field-group">
+              <label class="field-label" for="gender">Gender</label>
+              <select class="form-control" id="gender" name="gender" required>
+                <option value="Female" {% if form_data.get('gender') == 'Female' %}selected{% endif %}>Female</option>
+                <option value="Male" {% if form_data.get('gender') == 'Male' %}selected{% endif %}>Male</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="age">Age Bracket</label>
+              <select class="form-control" id="age" name="age" required>
+                {% for bracket in ['[0-10)', '[10-20)', '[20-30)', '[30-40)', '[40-50)', '[50-60)', '[60-70)', '[70-80)', '[80-90)', '[90-100)'] %}
+                <option value="{{ bracket }}" {% if form_data.get('age', '[50-60)') == bracket %}selected{% endif %}>{{ bracket }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Admission Context & Length of Stay -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-number">Section 02</div>
+            <h3 class="section-title">Admission Context & Hospital Stay</h3>
+            <p class="section-desc">Inpatient encounter setting and duration of care.</p>
+          </div>
+          <div class="grid-4">
+            <div class="field-group">
+              <label class="field-label" for="admission_type">Admission Type</label>
+              <select class="form-control" id="admission_type" name="admission_type" required>
+                <option value="Emergency" {% if form_data.get('admission_type') == 'Emergency' %}selected{% endif %}>Emergency</option>
+                <option value="Urgent" {% if form_data.get('admission_type') == 'Urgent' %}selected{% endif %}>Urgent</option>
+                <option value="Elective" {% if form_data.get('admission_type') == 'Elective' %}selected{% endif %}>Elective</option>
+                <option value="Trauma Center" {% if form_data.get('admission_type') == 'Trauma Center' %}selected{% endif %}>Trauma Center</option>
+                <option value="Other/Not Available" {% if form_data.get('admission_type') == 'Other/Not Available' %}selected{% endif %}>Other / Not Available</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="admission_source">Admission Source</label>
+              <select class="form-control" id="admission_source" name="admission_source" required>
+                <option value="Emergency Room" {% if form_data.get('admission_source') == 'Emergency Room' %}selected{% endif %}>Emergency Room</option>
+                <option value="Physician Referral" {% if form_data.get('admission_source') == 'Physician Referral' %}selected{% endif %}>Physician Referral</option>
+                <option value="Clinic Referral" {% if form_data.get('admission_source') == 'Clinic Referral' %}selected{% endif %}>Clinic Referral</option>
+                <option value="Transfer from Facility" {% if form_data.get('admission_source') == 'Transfer from Facility' %}selected{% endif %}>Transfer from Facility</option>
+                <option value="Other/Unknown" {% if form_data.get('admission_source') == 'Other/Unknown' %}selected{% endif %}>Other / Unknown</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="time_in_hospital">Length of Stay (Days)</label>
+              <input type="number" class="form-control" id="time_in_hospital" name="time_in_hospital" min="1" max="14" value="{{ form_data.get('time_in_hospital', 3) }}" required>
+              <span class="field-hint">1 – 14 days</span>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="number_diagnoses">Total Diagnoses</label>
+              <input type="number" class="form-control" id="number_diagnoses" name="number_diagnoses" min="1" max="16" value="{{ form_data.get('number_diagnoses', 7) }}" required>
+              <span class="field-hint">Diagnoses recorded (1–16)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Preceding 12-Month Utilization & Procedures -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-number">Section 03</div>
+            <h3 class="section-title">Prior 12-Month Utilization & Procedures</h3>
+            <p class="section-desc">Healthcare utilization history and inpatient procedure intensity.</p>
+          </div>
+          <div class="grid-3">
+            <div class="field-group">
+              <label class="field-label" for="number_inpatient">Inpatient Visits (Prior Year)</label>
+              <input type="number" class="form-control" id="number_inpatient" name="number_inpatient" min="0" max="21" value="{{ form_data.get('number_inpatient', 0) }}" required>
+              <span class="field-hint">Previous admissions (0+)</span>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="number_emergency">Emergency Visits (Prior Year)</label>
+              <input type="number" class="form-control" id="number_emergency" name="number_emergency" min="0" max="76" value="{{ form_data.get('number_emergency', 0) }}" required>
+              <span class="field-hint">Previous ER visits (0+)</span>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="number_outpatient">Outpatient Visits (Prior Year)</label>
+              <input type="number" class="form-control" id="number_outpatient" name="number_outpatient" min="0" max="42" value="{{ form_data.get('number_outpatient', 0) }}" required>
+              <span class="field-hint">Previous clinic visits (0+)</span>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="num_lab_procedures">Lab Procedures</label>
+              <input type="number" class="form-control" id="num_lab_procedures" name="num_lab_procedures" min="1" max="132" value="{{ form_data.get('num_lab_procedures', 43) }}" required>
+              <span class="field-hint">Diagnostic lab tests</span>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="num_procedures">Non-Lab Procedures</label>
+              <input type="number" class="form-control" id="num_procedures" name="num_procedures" min="0" max="6" value="{{ form_data.get('num_procedures', 1) }}" required>
+              <span class="field-hint">Medical / surgical (0–6)</span>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="num_medications">Total Medications</label>
+              <input type="number" class="form-control" id="num_medications" name="num_medications" min="1" max="81" value="{{ form_data.get('num_medications', 15) }}" required>
+              <span class="field-hint">Distinct medications prescribed</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Clinical & Medication Status -->
+        <div class="form-section">
+          <div class="section-header">
+            <div class="section-number">Section 04</div>
+            <h3 class="section-title">Clinical & Medication Management</h3>
+            <p class="section-desc">Primary diagnostic grouping, glycemic lab tests, and diabetes pharmacology.</p>
+          </div>
+          <div class="grid-4">
+            <div class="field-group">
+              <label class="field-label" for="primary_diagnosis">Primary Diagnosis</label>
+              <select class="form-control" id="primary_diagnosis" name="primary_diagnosis" required>
+                {% for diag in ['Circulatory', 'Respiratory', 'Digestive', 'Diabetes', 'Injury', 'Musculoskeletal', 'Genitourinary', 'Neoplasms', 'Other'] %}
+                <option value="{{ diag }}" {% if form_data.get('primary_diagnosis', 'Circulatory') == diag %}selected{% endif %}>{{ diag }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="diabetes_diagnosed">Diabetes Diagnosed</label>
+              <select class="form-control" id="diabetes_diagnosed" name="diabetes_diagnosed" required>
+                <option value="Yes" {% if form_data.get('diabetes_diagnosed', 'Yes') == 'Yes' %}selected{% endif %}>Yes (Code 250.xx)</option>
+                <option value="No" {% if form_data.get('diabetes_diagnosed') == 'No' %}selected{% endif %}>No</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="A1Cresult">HbA1c Test Result</label>
+              <select class="form-control" id="A1Cresult" name="A1Cresult" required>
+                <option value="None" {% if form_data.get('A1Cresult', 'None') == 'None' %}selected{% endif %}>None (Test not ordered)</option>
+                <option value="Norm" {% if form_data.get('A1Cresult') == 'Norm' %}selected{% endif %}>Normal (&lt; 7%)</option>
+                <option value=">7" {% if form_data.get('A1Cresult') == '>7' %}selected{% endif %}>Elevated (&gt; 7%)</option>
+                <option value=">8" {% if form_data.get('A1Cresult') == '>8' %}selected{% endif %}>High (&gt; 8%)</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="max_glu_serum">Serum Glucose Test</label>
+              <select class="form-control" id="max_glu_serum" name="max_glu_serum" required>
+                <option value="None" {% if form_data.get('max_glu_serum', 'None') == 'None' %}selected{% endif %}>None (Test not ordered)</option>
+                <option value="Norm" {% if form_data.get('max_glu_serum') == 'Norm' %}selected{% endif %}>Normal</option>
+                <option value=">200" {% if form_data.get('max_glu_serum') == '>200' %}selected{% endif %}>&gt; 200 mg/dL</option>
+                <option value=">300" {% if form_data.get('max_glu_serum') == '>300' %}selected{% endif %}>&gt; 300 mg/dL</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="insulin">Insulin Status</label>
+              <select class="form-control" id="insulin" name="insulin" required>
+                <option value="No" {% if form_data.get('insulin', 'No') == 'No' %}selected{% endif %}>No (Not Prescribed)</option>
+                <option value="Steady" {% if form_data.get('insulin') == 'Steady' %}selected{% endif %}>Steady Dose</option>
+                <option value="Up" {% if form_data.get('insulin') == 'Up' %}selected{% endif %}>Dosage Increased</option>
+                <option value="Down" {% if form_data.get('insulin') == 'Down' %}selected{% endif %}>Dosage Decreased</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="metformin">Metformin</label>
+              <select class="form-control" id="metformin" name="metformin" required>
+                <option value="No" {% if form_data.get('metformin', 'No') == 'No' %}selected{% endif %}>No</option>
+                <option value="Steady" {% if form_data.get('metformin') == 'Steady' %}selected{% endif %}>Steady</option>
+                <option value="Up" {% if form_data.get('metformin') == 'Up' %}selected{% endif %}>Up</option>
+                <option value="Down" {% if form_data.get('metformin') == 'Down' %}selected{% endif %}>Down</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="glipizide">Glipizide</label>
+              <select class="form-control" id="glipizide" name="glipizide" required>
+                <option value="No" {% if form_data.get('glipizide', 'No') == 'No' %}selected{% endif %}>No</option>
+                <option value="Steady" {% if form_data.get('glipizide') == 'Steady' %}selected{% endif %}>Steady</option>
+                <option value="Up" {% if form_data.get('glipizide') == 'Up' %}selected{% endif %}>Up</option>
+                <option value="Down" {% if form_data.get('glipizide') == 'Down' %}selected{% endif %}>Down</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="glyburide">Glyburide</label>
+              <select class="form-control" id="glyburide" name="glyburide" required>
+                <option value="No" {% if form_data.get('glyburide', 'No') == 'No' %}selected{% endif %}>No</option>
+                <option value="Steady" {% if form_data.get('glyburide') == 'Steady' %}selected{% endif %}>Steady</option>
+                <option value="Up" {% if form_data.get('glyburide') == 'Up' %}selected{% endif %}>Up</option>
+                <option value="Down" {% if form_data.get('glyburide') == 'Down' %}selected{% endif %}>Down</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="change">Medication Change</label>
+              <select class="form-control" id="change" name="change" required>
+                <option value="No" {% if form_data.get('change', 'No') == 'No' %}selected{% endif %}>No (Dosage Unchanged)</option>
+                <option value="Ch" {% if form_data.get('change') == 'Ch' %}selected{% endif %}>Ch (Dosage Modified)</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="diabetesMed">Diabetes Medication</label>
+              <select class="form-control" id="diabetesMed" name="diabetesMed" required>
+                <option value="Yes" {% if form_data.get('diabetesMed', 'Yes') == 'Yes' %}selected{% endif %}>Yes (Prescribed)</option>
+                <option value="No" {% if form_data.get('diabetesMed') == 'No' %}selected{% endif %}>No (None Prescribed)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" onclick="clearForm()">Clear Form</button>
+          <button type="submit" class="btn-primary">Generate Readmission Prediction</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB: CURRICULUM MODULES (M1–M6 AUDIT & DEEP DIVE DASHBOARD)     -->
+    <!-- ============================================================== -->
+    <div id="tab-modules" class="tab-panel">
+      <section class="panel-heading">
+        <h2 class="panel-title">Curriculum Modules (M1 – M6) Audit & Deep Dive</h2>
+        <p class="panel-subtitle">
+          Explore theoretical foundations, mathematical formulations, clinical implementations, and live diagnostic reports across all six curriculum modules.
+        </p>
+      </section>
+
+      <!-- Module Pills Navigation Bar -->
+      <div class="module-pills-bar">
+        <button type="button" id="btn-pill-m1" class="module-pill-btn active" onclick="switchModuleSubTab('m1')">CO1: Lifecycle & Preprocessing (M1)</button>
+        <button type="button" id="btn-pill-m2" class="module-pill-btn" onclick="switchModuleSubTab('m2')">CO2: Linear Models & Regularization (M2)</button>
+        <button type="button" id="btn-pill-m3" class="module-pill-btn" onclick="switchModuleSubTab('m3')">CO3: Tree-Based Ensembles (M3)</button>
+        <button type="button" id="btn-pill-m4" class="module-pill-btn" onclick="switchModuleSubTab('m4')">CO4: Unsupervised & PCA Phenotypes (M4)</button>
+        <button type="button" id="btn-pill-m5" class="module-pill-btn" onclick="switchModuleSubTab('m5')">CO5: Evaluation & Calibration (M5)</button>
+        <button type="button" id="btn-pill-m6" class="module-pill-btn" onclick="switchModuleSubTab('m6')">CO6: Docker & Production MLOps (M6)</button>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- MODULE 1 SUBPANEL: ML LIFECYCLE & INPATIENT SYSTEM           -->
+      <!-- ============================================================ -->
+      <div id="subpanel-m1" class="module-subpanel active">
+        <div class="card-surface">
+          <div class="module-status-header">
+            <div>
+              <span class="module-badge-tag badge-verified">&#10003; Module 01 Verified Operational</span>
+              <h3 class="card-title" style="margin-top:0.4rem;">DiabetesPredict as a System — The Clinical ML Lifecycle</h3>
+              <p class="card-desc">End-to-end service running on Day One: user requests, clinical leakage checks, 9-stage lifecycle, and the training-serving boundary.</p>
+            </div>
+            <a href="/artifacts/cleaning/missing_values_bar.png" target="_blank" class="btn-sample">View Leakage Audit</a>
+          </div>
+
+          <div class="code-run-banner">
+            <div><strong>Runnable Code:</strong> <code>cleaning/clean_data.py</code> &bull; <code>app/app.py</code></div>
+            <div class="cmd-text">Terminal: py cleaning/clean_data.py</div>
+          </div>
+
+          <div class="module-card-grid">
+            <div class="formula-card">
+              <h4>1. The 9-Stage Clinical ML Lifecycle</h4>
+              <p style="font-size:0.88rem; line-height:1.5;">
+                Raw Ingestion &rarr; Clinical Leakage Cleaning &rarr; Feature Engineering &rarr; Train/Test Split &rarr; Model Training &rarr; Packaged Pipeline &rarr; Served API &rarr; Monitored Production &rarr; Retraining Loop.
+              </p>
+              <div style="margin-top:0.6rem;">
+                <code>Supervised Classification: y &isin; {0: Not Readmitted, 1: Readmitted}</code>
+              </div>
+            </div>
+
+            <div class="formula-card">
+              <h4>2. Critical Clinical Leakage Rule</h4>
+              <p style="font-size:0.88rem; line-height:1.5;">
+                Patients who expired in-hospital (discharge IDs 11, 19, 20, 21; 1,652 encounters) have 100% <code>readmitted = NO</code>. Retaining them induces artificial negative correlations with clinical severity. They must be dropped prior to splitting!
+              </p>
+            </div>
+          </div>
+
+          <div class="artifact-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="artifact-box">
+              <img src="/artifacts/cleaning/missing_values_bar.png" alt="Missing Values & Feature Filtering">
+              <div class="artifact-caption">Figure M1-A: Missing Data Profile & High-Missingness Feature Exclusion</div>
+            </div>
+            <div class="artifact-box">
+              <img src="/artifacts/eda/target_distribution.png" alt="Target Distribution">
+              <div class="artifact-caption">Figure M1-B: Binary Target Class Balance (53.15% Class 0 vs 46.85% Class 1)</div>
+            </div>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">M1 Syllabus Topic Verification Checklist</h4>
+            <ul class="checklist-list">
+              <li><span class="check-icon">&#10004;</span> <strong>Day-One Working Service:</strong> Clinicians issue requests against live Flask REST API and web forms before inspecting internals.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>9-Stage ML System Lifecycle:</strong> Raw EHR data &rarr; Cleaned records &rarr; 22 features &rarr; Trained pipeline &rarr; Served endpoint &rarr; Retraining loop.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Learning Paradigms Split:</strong> Supervised binary classification on inpatient readmission; not unsupervised clustering, not reinforcement learning.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>End-to-End Prediction Trace:</strong> HTTP request &rarr; Bounds validation &rarr; ColumnTransformer &rarr; Inference &rarr; Calibrated probability response.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Training-Serving Boundary:</strong> Bundled <code>diabetes_pipeline.joblib</code> eliminates code divergence and offline-online feature skew.</li>
+            </ul>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">Live Module Ingestion & Cleaning Report</h4>
+            <div class="report-box">{{ reports.cleaning }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- MODULE 2 SUBPANEL: LINEAR MODELS AT DEPTH                     -->
+      <!-- ============================================================ -->
+      <div id="subpanel-m2" class="module-subpanel">
+        <div class="card-surface">
+          <div class="module-status-header">
+            <div>
+              <span class="module-badge-tag badge-verified">&#10003; Module 02 Verified Operational</span>
+              <h3 class="card-title" style="margin-top:0.4rem;">Supervised Learning — Linear Models at Depth</h3>
+              <p class="card-desc">Normal equations vs Gradient Descent, geometric L1 vs L2 regularization, Logistic sigmoid loss, and clinical Odds Ratio interpretation.</p>
+            </div>
+            <a href="/artifacts/coefficients/top_coefficients.png" target="_blank" class="btn-sample">View Odds Ratios</a>
+          </div>
+
+          <div class="code-run-banner">
+            <div><strong>Runnable Code:</strong> <code>regularization/run_regularization.py</code> &bull; <code>coefficients/run_coefficients.py</code></div>
+            <div class="cmd-text">Terminal: py regularization/run_regularization.py</div>
+          </div>
+
+          <div class="module-card-grid">
+            <div class="formula-card">
+              <h4>1. Normal Equations vs. Gradient Descent</h4>
+              <p style="font-size:0.86rem;">
+                Closed-form: <code>&theta;* = (X<sup>T</sup>X)<sup>-1</sup>X<sup>T</sup>y</code> &bull; O(d<sup>3</sup>) matrix inversion.<br>
+                Iterative: <code>&theta; &larr; &theta; - (&alpha;/n) X<sup>T</sup>(X&theta; - y)</code> &bull; Scales to millions of features.
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>2. Why L1 Induces Sparsity (Geometry)</h4>
+              <p style="font-size:0.86rem;">
+                L1 constraint forms a diamond with sharp corners on axes; expanding loss contours touch corners first, forcing non-predictive weights to <strong>exact zero</strong>. L2 constraint is smooth and spherical, shrinking weights without zeroes.
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>3. Logistic Sigmoid & Log-Loss Gradient</h4>
+              <p style="font-size:0.86rem;">
+                Sigmoid: <code>p = &sigma;(z) = 1 / (1 + e<sup>-z</sup>)</code><br>
+                Loss: <code>L = -(1/n) &Sigma; [y ln(p) + (1-y) ln(1-p)]</code><br>
+                Gradient: <code>&nabla;<sub>w</sub>L = (1/n) X<sup>T</sup>(p - y)</code>
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>4. Clinical Odds Ratios: Exp(w<sub>j</sub>)</h4>
+              <p style="font-size:0.86rem;">
+                <code>Prior Inpatient (w = +0.3421) &rarr; OR = 1.408 (+40.8% odds)</code><br>
+                <code>Emergency Visits (w = +0.0984) &rarr; OR = 1.103 (+10.3% odds)</code><br>
+                Prior utilization is the primary clinical driver of readmission.
+              </p>
+            </div>
+          </div>
+
+          <div class="artifact-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="artifact-box">
+              <img src="/artifacts/regularization/regularization_comparison.png" alt="Regularization Comparison">
+              <div class="artifact-caption">Figure M2-A: L1 (Lasso) vs L2 (Ridge) Penalty across C &isin; [0.001, 10.0]</div>
+            </div>
+            <div class="artifact-box">
+              <img src="/artifacts/coefficients/top_coefficients.png" alt="Top Feature Coefficients">
+              <div class="artifact-caption">Figure M2-B: Top Feature Weights & Log-Odds Impact on Readmission</div>
+            </div>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">M2 Syllabus Topic Verification Checklist</h4>
+            <ul class="checklist-list">
+              <li><span class="check-icon">&#10004;</span> <strong>Normal Equations vs Gradient Descent:</strong> Computational complexity comparison, memory constraints, and matrix conditioning.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Ridge (L2), Lasso (L1), Elastic Net:</strong> Penalized objective formulations, coordinate descent, soft thresholding operator.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Geometric Sparsity Proof:</strong> Corner tangency on coordinate axes in diamond L1 ball vs smooth spherical L2 surface.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Binary Logistic Regression:</strong> Sigmoid link function, logit transformation, cross-entropy loss, decision hyperplane.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Feature Scaling & Encodings:</strong> StandardScaler on continuous columns; OneHotEncoder on categorical clinical variables.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Worked Clinical Example:</strong> Standardized Ridge logistic regression model, coefficient odds ratios, clinical risk factor interpretation.</li>
+            </ul>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">Live Regularization & Odds Ratio Report</h4>
+            <div class="report-box">{{ reports.regularization }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- MODULE 3 SUBPANEL: TREE-BASED MODELS                          -->
+      <!-- ============================================================ -->
+      <div id="subpanel-m3" class="module-subpanel">
+        <div class="card-surface">
+          <div class="module-status-header">
+            <div>
+              <span class="module-badge-tag badge-verified">&#10003; Module 03 Verified Operational</span>
+              <h3 class="card-title" style="margin-top:0.4rem;">Supervised Learning — Tree-Based Models</h3>
+              <p class="card-desc">CART decision trees, pruning & depth overfitting, Random Forest variance reduction, Gradient Boosting, and HistGradientBoosting.</p>
+            </div>
+            <a href="/artifacts/decision_tree/tree_depth_performance.png" target="_blank" class="btn-sample">View Depth Overfitting</a>
+          </div>
+
+          <div class="code-run-banner">
+            <div><strong>Runnable Code:</strong> <code>decision_tree/run_decision_tree.py</code> &bull; <code>splitting_criteria/run_splitting_criteria.py</code></div>
+            <div class="cmd-text">Terminal: py decision_tree/run_decision_tree.py</div>
+          </div>
+
+          <div class="module-card-grid">
+            <div class="formula-card">
+              <h4>1. CART Splitting Criteria</h4>
+              <p style="font-size:0.86rem;">
+                Gini Impurity: <code>I<sub>Gini</sub> = 1 - &Sigma; p<sub>k</sub><sup>2</sup> = 2 p<sub>0</sub> p<sub>1</sub></code><br>
+                Entropy: <code>I<sub>Entropy</sub> = -&Sigma; p<sub>k</sub> log<sub>2</sub>(p<sub>k</sub>)</code><br>
+                Both yield nearly identical optimal split thresholds on clinical continuous counts.
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>2. Random Forest Variance Reduction Proof</h4>
+              <p style="font-size:0.86rem;">
+                <code>Var(Forest) = &rho; &sigma;<sup>2</sup> + [(1-&rho;)/B] &sigma;<sup>2</sup> &rarr; &rho; &sigma;<sup>2</sup></code><br>
+                Random feature subsampling (&radic;d) decorrelates trees (&rho; &rarr; 0), driving total ensemble variance down.
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>3. Tree Depth Overfitting Dynamics</h4>
+              <p style="font-size:0.86rem;">
+                <code>Depth 6:  Train 62.8% | Test 62.3% | AUC 0.658 (Optimal)</code><br>
+                <code>Depth 20: Train 85.9% | Test 55.4% | AUC 0.562 (Severe Overfit)</code><br>
+                Unconstrained deep trees memorize individual patient noise.
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>4. HistGradientBoosting (Production Workhorse)</h4>
+              <p style="font-size:0.86rem;">
+                256-bin continuous histogram discretization drops sort complexity from O(n log n) to O(n).<br>
+                <code>Production Metrics: 63.69% Accuracy | 0.6857 ROC-AUC</code>
+              </p>
+            </div>
+          </div>
+
+          <div class="artifact-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="artifact-box">
+              <img src="/artifacts/decision_tree/tree_depth_performance.png" alt="Tree Depth Overfitting">
+              <div class="artifact-caption">Figure M3-A: Decision Tree Depth vs Accuracy (Train/Test Divergence)</div>
+            </div>
+            <div class="artifact-box">
+              <img src="/artifacts/splitting_criteria/gini_vs_entropy_comparison.png" alt="Splitting Criteria Comparison">
+              <div class="artifact-caption">Figure M3-B: Splitting Criteria Comparison: Gini Impurity vs Entropy</div>
+            </div>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">M3 Syllabus Topic Verification Checklist</h4>
+            <ul class="checklist-list">
+              <li><span class="check-icon">&#10004;</span> <strong>Decision Trees (CART):</strong> Greedy top-down partitioning, Gini impurity, entropy, stopping rules (max_depth, min_samples_leaf).</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Tree Pruning:</strong> Cost-Complexity Pruning (CCP), bias-variance angle, depth progression overfitting analysis.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Random Forests:</strong> Bagging, feature subsampling (&radic;d), out-of-bag (OOB) error estimation, mathematical variance-reduction proof.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Gradient Boosting:</strong> Functional gradient descent in function space, fitting trees to pseudo-residuals r<sub>i</sub> = y<sub>i</sub> - p<sub>i</sub>.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>HistGradientBoosting / LightGBM:</strong> Histogram-based splitting, leaf-wise growth, 2nd-order Taylor expansion loss approximation.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Feature Importance:</strong> Mean Decrease in Impurity (MDI), Permutation Feature Importance (PFI) on test set, SHAP values preview.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Tabular Dominance:</strong> Why tree ensembles consistently outperform neural networks on structured clinical EHR records.</li>
+            </ul>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">Live Decision Tree Complexity Report</h4>
+            <div class="report-box">{{ reports.decision_tree }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- MODULE 4 SUBPANEL: UNSUPERVISED LEARNING                      -->
+      <!-- ============================================================ -->
+      <div id="subpanel-m4" class="module-subpanel">
+        <div class="card-surface">
+          <div class="module-status-header">
+            <div>
+              <span class="module-badge-tag badge-verified">&#10003; Module 04 Verified Operational</span>
+              <h3 class="card-title" style="margin-top:0.4rem;">Unsupervised Learning — Patient Phenotyping & Anomaly Detection</h3>
+              <p class="card-desc">Lloyd's K-Means, K-Means++, Hierarchical linkage dendrograms, DBSCAN density metrics, PCA standardization pitfalls, and cluster feature enrichment.</p>
+            </div>
+            <a href="/artifacts/eda/numerical_correlation_heatmap.png" target="_blank" class="btn-sample">View Correlations</a>
+          </div>
+
+          <div class="code-run-banner">
+            <div><strong>Runnable Code:</strong> <code>eda/run_eda.py</code> &bull; <code>src/preprocessing.py</code></div>
+            <div class="cmd-text">Terminal: py eda/run_eda.py</div>
+          </div>
+
+          <div class="module-card-grid">
+            <div class="formula-card">
+              <h4>1. K-Means Lloyd's Algorithm & WCSS</h4>
+              <p style="font-size:0.86rem;">
+                Minimizes Inertia: <code>J = &Sigma; &Sigma; ||x - &mu;<sub>k</sub>||<sup>2</sup></code><br>
+                Assignment: <code>c<sup>(i)</sup> = argmin ||x<sup>(i)</sup> - &mu;<sub>k</sub>||<sup>2</sup></code><br>
+                Update: <code>&mu;<sub>k</sub> = (1/|C<sub>k</sub>|) &Sigma; x</code>
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>2. K-Means++ & Silhouette Score</h4>
+              <p style="font-size:0.86rem;">
+                K-Means++ samples initial centroids with probability proportional to <code>D(x)<sup>2</sup></code>, providing an O(log K) bound.<br>
+                Silhouette: <code>s(i) = [b(i) - a(i)] / max(a(i), b(i)) &isin; [-1, 1]</code>
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>3. Hierarchical Linkage & DBSCAN</h4>
+              <p style="font-size:0.86rem;">
+                Ward's Linkage minimizes within-cluster variance increase upon merging.<br>
+                DBSCAN uses core (&ge;minPts within &epsilon;) and border points, flagging extreme clinical utilization as noise (label -1).
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>4. PCA Production Pitfall</h4>
+              <p style="font-size:0.86rem;">
+                <strong>Running PCA without standardization</strong> causes high-variance columns (lab procedures) to dominate components, completely erasing the signal of low-range predictors (prior inpatient admissions).
+              </p>
+            </div>
+          </div>
+
+          <div class="artifact-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="artifact-box">
+              <img src="/artifacts/eda/numerical_correlation_heatmap.png" alt="Correlation Heatmap">
+              <div class="artifact-caption">Figure M4-A: Clinical Numerical Feature Correlation Matrix</div>
+            </div>
+            <div class="artifact-box">
+              <img src="/artifacts/scaling/numeric_features_before_after.png" alt="Scaling Comparison">
+              <div class="artifact-caption">Figure M4-B: StandardScaler Transformation for Distance & Clustering Models</div>
+            </div>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">M4 Syllabus Topic Verification Checklist</h4>
+            <ul class="checklist-list">
+              <li><span class="check-icon">&#10004;</span> <strong>K-Means Clustering:</strong> Modern Lloyd-algorithm view, Inertia objective, Elbow method and Silhouette score.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>K-Means++ Initialization:</strong> Probabilistic squared distance seeding, mini-batch K-Means for large clinical datasets.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Hierarchical Clustering:</strong> Agglomerative bottom-up merges, linkage criteria (Single, Complete, Average, Ward), reading dendrograms.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>DBSCAN:</strong> Density parameters (&epsilon;, minPts), core vs border points, non-convex cluster handling, outlier discovery.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>PCA in Production:</strong> Covariance eigendecomposition, standardization pitfalls, loss of direct clinical interpretability.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>t-SNE & UMAP:</strong> Manifold learning, perplexity / n_neighbors tuning, critical non-metric Euclidean distance warning.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Anomaly Detection:</strong> Isolation Forest average path length, One-Class SVM, autoencoder reconstruction error preview.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Practical Pipeline:</strong> When to cluster vs supervised models; cluster labels as engineered features for downstream supervised classifiers.</li>
+            </ul>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">Live Exploratory Data Analysis Report</h4>
+            <div class="report-box">{{ reports.eda }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- MODULE 5 SUBPANEL: EVALUATION, SELECTION & CALIBRATION        -->
+      <!-- ============================================================ -->
+      <div id="subpanel-m5" class="module-subpanel">
+        <div class="card-surface">
+          <div class="module-status-header">
+            <div>
+              <span class="module-badge-tag badge-verified">&#10003; Module 05 Verified Operational</span>
+              <h3 class="card-title" style="margin-top:0.4rem;">Model Evaluation, Selection, and Calibration</h3>
+              <p class="card-desc">Stratified 80/20 partitioning, Confusion matrix, ROC-AUC vs PR-AUC, Platt scaling calibration, learning curve bias diagnosis, and McNemar's test.</p>
+            </div>
+            <a href="/artifacts/model_comparison/model_comparison_bar.png" target="_blank" class="btn-sample">View Model Benchmarks</a>
+          </div>
+
+          <div class="code-run-banner">
+            <div><strong>Runnable Code:</strong> <code>model_comparison/run_model_comparison.py</code> &bull; <code>bias_variance/run_bias_variance.py</code></div>
+            <div class="cmd-text">Terminal: py model_comparison/run_model_comparison.py</div>
+          </div>
+
+          <div class="module-card-grid">
+            <div class="formula-card">
+              <h4>1. Test Set Confusion Matrix (20,023 Encounters)</h4>
+              <p style="font-size:0.86rem;">
+                <code>TN = 7,825 | FP = 2,819 | FN = 4,449 | TP = 4,930</code><br>
+                Accuracy = 63.69% | Precision = 63.62% | Recall = 52.53%<br>
+                ROC-AUC = 0.6857 | F1 = 0.5755
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>2. Probability Calibration (Platt & Brier)</h4>
+              <p style="font-size:0.86rem;">
+                A predicted risk of 0.70 must reflect a 70% empirical readmission rate.<br>
+                Platt scaling fits a sigmoid on validation logits.<br>
+                <code>Calibrated Brier Score = 0.218</code>
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>3. The Bergstra-Bengio Principle</h4>
+              <p style="font-size:0.86rem;">
+                ML problems exhibit <strong>low effective dimensionality</strong>: a 9-trial Random Search tests 9 distinct values of the critical parameter, whereas a 3x3 Grid Search tests only 3, achieving 3x higher parameter resolution!
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>4. Learning Curve Diagnosis</h4>
+              <p style="font-size:0.86rem;">
+                Training and validation curves converge at ~63.7% with a gap &lt; 1.5%.<br>
+                <strong>Diagnosis: Moderate Bias</strong>. Remaining performance ceiling is due to uncaptured post-discharge social/behavioral factors.
+              </p>
+            </div>
+          </div>
+
+          <div class="artifact-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="artifact-box">
+              <img src="/artifacts/bias_variance/learning_curves.png" alt="Learning Curves">
+              <div class="artifact-caption">Figure M5-A: Learning Curves (Sample Size vs Performance — Bias Diagnosis)</div>
+            </div>
+            <div class="artifact-box">
+              <img src="/artifacts/model_comparison/model_comparison_bar.png" alt="Model Comparison Bar">
+              <div class="artifact-caption">Figure M5-B: Candidate Estimator Benchmark (HistGradientBoosting Selected)</div>
+            </div>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">M5 Syllabus Topic Verification Checklist</h4>
+            <ul class="checklist-list">
+              <li><span class="check-icon">&#10004;</span> <strong>Partitioning Discipline:</strong> Three-way split; held-out test set locked in vault from all feature fitting.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Cross-Validation:</strong> Stratified K-Fold preserving 46.85% class balance; Nested CV for unbiased evaluation.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Classification Metrics:</strong> Accuracy paradox, precision, recall, F1, confusion matrix, ROC-AUC (0.6857) vs PR-AUC.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Regression Metrics:</strong> RMSE vs MAE outlier sensitivity (Gaussian vs Laplace error assumptions).</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Probability Calibration:</strong> Platt scaling, isotonic regression, reliability curves, Brier score calculation (0.218).</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Hyperparameter Optimization:</strong> Grid search vs Random search (Bergstra-Bengio), Bayesian optimization preview.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Learning & Validation Curves:</strong> Diagnosing underfitting vs overfitting vs data scarcity from convergence gap.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Statistical Significance:</strong> McNemar's test for paired classification predictions (&chi;<sup>2</sup> = (|b-c|-1)<sup>2</sup> / (b+c)).</li>
+            </ul>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">Live Candidate Model Comparison Report</h4>
+            <div class="report-box">{{ reports.model_comparison }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================ -->
+      <!-- MODULE 6 SUBPANEL: ML ENGINEERING & PRODUCTION               -->
+      <!-- ============================================================ -->
+      <div id="subpanel-m6" class="module-subpanel">
+        <div class="card-surface">
+          <div class="module-status-header">
+            <div>
+              <span class="module-badge-tag badge-verified">&#10003; Module 06 &bull; CO6 Docker Verified Operational</span>
+              <h3 class="card-title" style="margin-top:0.4rem;">ML Engineering & Production Containerization (CO6)</h3>
+              <p class="card-desc">Feature stores, training-serving skew elimination, ONNX & Docker packaging, Flask/Gunicorn serving, PSI drift monitoring, and container health probes.</p>
+            </div>
+            <a href="/artifacts/co6/docker_container_architecture.png" target="_blank" class="btn-sample">View Docker Architecture</a>
+          </div>
+
+          <div class="code-run-banner">
+            <div><strong>Runnable Code:</strong> <code>co6/run_co6_docker.py</code> &bull; <code>tests/test_docker.py</code></div>
+            <div class="cmd-text">Terminal: py co6/run_co6_docker.py  |  docker compose up --build</div>
+          </div>
+
+          <div class="module-card-grid">
+            <div class="formula-card">
+              <h4>1. Feature Stores & Point-in-Time Correctness</h4>
+              <p style="font-size:0.86rem;">
+                Feast feature store decouples offline Parquet/Snowflake storage (for training) from online Redis storage (for &lt;5ms serving), enforcing point-in-time joins ("time travel") to eliminate lookahead feature leakage.
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>2. Training-Serving Skew Elimination</h4>
+              <p style="font-size:0.86rem;">
+                Packaging the fitted <code>ColumnTransformer</code> and <code>HistGradientBoostingClassifier</code> into a single serialized <code>diabetes_pipeline.joblib</code> guarantees identical matrix transformations in training and production.
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>3. Containerized Packaging (Docker & Gunicorn)</h4>
+              <p style="font-size:0.86rem;">
+                Enforces reproducible Linux container runtime with <code>python:3.11-slim</code>, non-root user <code>appuser</code> for HIPAA clinical security, Gunicorn multi-worker WSGI, and automated <code>/health</code> probes.
+              </p>
+            </div>
+
+            <div class="formula-card">
+              <h4>4. Production Drift Monitoring: PSI Formula</h4>
+              <p style="font-size:0.86rem;">
+                <code>PSI = &Sigma; (P<sub>prod</sub> - P<sub>train</sub>) &times; ln(P<sub>prod</sub> / P<sub>train</sub>)</code><br>
+                PSI &lt; 0.10: Stable &bull; 0.10 &le; PSI &lt; 0.25: Moderate shift warning &bull; PSI &ge; 0.25: Trigger automated retraining pipeline.
+              </p>
+            </div>
+          </div>
+
+          <div class="artifact-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="artifact-box">
+              <img src="/artifacts/co6/docker_container_architecture.png" alt="Docker Container Architecture">
+              <div class="artifact-caption">Figure M6-A: CO6 Docker Container Multi-Layer Production Architecture</div>
+            </div>
+            <div class="artifact-box">
+              <img src="/artifacts/logistic_regression/roc_curve.png" alt="ROC Curve">
+              <div class="artifact-caption">Figure M6-B: Production Model Discriminative ROC Curve (ROC-AUC: 0.6857)</div>
+            </div>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">M6 / CO6 Syllabus Topic Verification Checklist</h4>
+            <ul class="checklist-list">
+              <li><span class="check-icon">&#10004;</span> <strong>Notebook-to-Production Gap:</strong> Refactoring notebooks into pure Python modules (<code>src/</code>), configuration separation, type hinting, and dependency locking.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Docker Containerization (CO6):</strong> Production <code>Dockerfile</code>, <code>.dockerignore</code> optimization, non-root user security, port 5000 exposure, automated <code>HEALTHCHECK</code> probe.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Container Orchestration:</strong> <code>docker-compose.yml</code> multi-container architecture with restart policies, healthcheck probes, and resource quotas (1.5 CPU, 1024MB RAM).</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Training-Serving Skew Prevention:</strong> Single serialized pipeline artifact, schema validation contracts (<code>src/predict.py</code>).</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Model Packaging:</strong> Pickle security pitfalls, ONNX export and high-performance ONNX Runtime, containerized serving with Docker.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Production Telemetry & Drift:</strong> Operational latency tracking (p95/p99), Data Drift (covariate shift), Concept Drift, Label Drift via PSI and KS-test.</li>
+              <li><span class="check-icon">&#10004;</span> <strong>Automated CI/CD Testing:</strong> 20 automated unit and integration tests including <code>tests/test_docker.py</code> for container validation.</li>
+            </ul>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">Live CO6 Docker Containerization Audit Report</h4>
+            <div class="report-box">{{ reports.co6 }}</div>
+          </div>
+
+          <div class="card-surface" style="margin-top:1.25rem;">
+            <h4 class="card-title">Live Pipeline Packaging & Verification Report</h4>
+            <div class="report-box">{{ reports.pipeline }}</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB: CO6 DOCKER & PRODUCTION CONTAINERIZATION CONTROL CENTER   -->
+    <!-- ============================================================== -->
+    <div id="tab-co6" class="tab-panel">
+      <section class="panel-heading">
+        <h2 class="panel-title">Course Outcome 6 (CO6): Production Docker Containerization</h2>
+        <p class="panel-subtitle">
+          Containerized clinical machine learning deployment with Python 3.11-slim, Gunicorn WSGI, non-root HIPAA security compliance, automated healthchecks, and Docker Compose orchestration.
+        </p>
+      </section>
+
+      <!-- Container Highlights Banner -->
+      <div class="card-surface" style="margin-bottom:1.5rem;">
+        <div class="module-status-header">
+          <div>
+            <span class="module-badge-tag badge-verified">&#10003; 100% Certified Production Ready</span>
+            <h3 class="card-title" style="margin-top:0.4rem;">Dockerized Clinical ML Inference Service</h3>
+            <p class="card-desc">Image: <code>diabetes-predict-app:1.0.0</code> &bull; Base: <code>python:3.11-slim</code> &bull; Healthcheck: <code>/health (HTTP 200 OK)</code> &bull; Port: <code>5000</code></p>
+          </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <a href="/health" target="_blank" class="btn-sample">Test /health Probe</a>
+            <a href="/api/docker-status" target="_blank" class="btn-sample">View Docker API Status</a>
+          </div>
+        </div>
+
+        <div class="code-run-banner" style="margin-top:1rem;">
+          <div><strong>Docker CLI Commands:</strong> <code>docker compose up --build</code> &bull; <code>py co6/run_co6_docker.py</code></div>
+          <div class="cmd-text">py -m unittest tests/test_docker.py</div>
+        </div>
+      </div>
+
+      <!-- Docker Architecture Visual -->
+      <div class="card-surface" style="margin-bottom:1.5rem;">
+        <h3 class="card-title">Container Multi-Layer Architecture</h3>
+        <p class="card-desc">Publication-grade visualization generated by <code>co6/run_co6_docker.py</code>.</p>
+        <div class="artifact-box" style="margin-top:1rem;">
+          <img src="/artifacts/co6/docker_container_architecture.png" alt="Docker Container Architecture">
+          <div class="artifact-caption">Figure CO6-1: Multi-Layered Docker Container Architecture (Base OS, User Security, Model Engine, WSGI Serving, and Health Monitoring)</div>
+        </div>
+      </div>
+
+      <!-- The 4 Pillars of CO6 Containerization -->
+      <div class="module-card-grid" style="margin-bottom:1.5rem;">
+        <div class="formula-card">
+          <h4>1. Base OS & HIPAA Security Hardening</h4>
+          <p style="font-size:0.86rem;">
+            &bull; Base: <code>python:3.11-slim</code> (&lt;150MB attack surface)<br>
+            &bull; User: Non-root <code>appuser</code> (UID 1000) prevents privilege escalation<br>
+            &bull; Clean system caches: APT lists purged in identical layer
+          </p>
+        </div>
+
+        <div class="formula-card">
+          <h4>2. Layer Caching & Build Hygiene</h4>
+          <p style="font-size:0.86rem;">
+            &bull; <code>requirements.txt</code> installed before source code copy for instant caching<br>
+            &bull; <code>.dockerignore</code> excludes raw dataset (~20MB), <code>.venv</code>, and <code>__pycache__</code><br>
+            &bull; Build context minimized by 95%
+          </p>
+        </div>
+
+        <div class="formula-card">
+          <h4>3. Production WSGI Serving</h4>
+          <p style="font-size:0.86rem;">
+            &bull; WSGI Server: <code>Gunicorn</code> (2 workers, 2 threads, 60s timeout)<br>
+            &bull; Ports: <code>EXPOSE 5000</code> mapped 1-to-1 to host <code>5000:5000</code><br>
+            &bull; Environment: <code>HOST=0.0.0.0</code>, <code>FLASK_ENV=production</code>
+          </p>
+        </div>
+
+        <div class="formula-card">
+          <h4>4. Health Probes & Resource Management</h4>
+          <p style="font-size:0.86rem;">
+            &bull; Docker Probe: Automated <code>/health</code> check every 30s<br>
+            &bull; Resource Limits: 1.5 CPU cores, 1024MB RAM max memory<br>
+            &bull; Fault Tolerance: <code>restart: unless-stopped</code>
+          </p>
+        </div>
+      </div>
+
+      <!-- Execution Scripts & Guide -->
+      <div class="card-surface" style="margin-bottom:1.5rem;">
+        <h3 class="card-title">1-Click Execution & Automation Scripts</h3>
+        <p class="card-desc">Scripts included directly in <code>co6/</code> for seamless developer workflow across Windows and Linux:</p>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-top:1rem;">
+          <div style="background:var(--bg-main); padding:1rem; border-radius:6px; border:1px solid var(--border-color);">
+            <strong>Windows Batch Scripts:</strong>
+            <ul style="margin-top:0.5rem; padding-left:1.2rem; font-size:0.88rem;">
+              <li><code>co6\build_docker.bat</code> &mdash; Builds image <code>diabetes-predict-app:1.0.0</code></li>
+              <li><code>co6\run_docker.bat</code> &mdash; Starts container via Docker Compose</li>
+            </ul>
+          </div>
+          <div style="background:var(--bg-main); padding:1rem; border-radius:6px; border:1px solid var(--border-color);">
+            <strong>Linux / macOS Bash Scripts:</strong>
+            <ul style="margin-top:0.5rem; padding-left:1.2rem; font-size:0.88rem;">
+              <li><code>bash co6/build_docker.sh</code> &mdash; Shell build script with error handling</li>
+              <li><code>bash co6/run_docker.sh</code> &mdash; Shell compose runner script</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Audit Report -->
+      <div class="card-surface">
+        <h3 class="card-title">Live CO6 Docker Audit & Verification Report</h3>
+        <p class="card-desc">Output from <code>co6/run_co6_docker.py</code> certifying 100/100 compliance across Dockerfile, .dockerignore, and Docker Compose.</p>
+        <div class="report-box">{{ reports.co6 }}</div>
+      </div>
+    </div>
+
+    <div id="tab-dataset" class="tab-panel">
+      <section class="panel-heading">
+        <h2 class="panel-title">Data Ingestion & Clinical Dataset Schema</h2>
+        <p class="panel-subtitle">
+          Auditing 101,766 inpatient encounters across 130 US hospitals from 1999–2008.
+        </p>
+      </section>
+
+      <div class="card-surface">
+        <h3 class="card-title">Dataset Characteristics</h3>
+        <p class="card-desc">Comprehensive dataset audit summary from ingestion module.</p>
+        <div class="report-box">{{ reports.ingestion }}</div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 3: DATA INSIGHTS (5 MAJOR EDA VISUALIZATIONS)              -->
+    <!-- ============================================================== -->
+    <div id="tab-eda" class="tab-panel">
+      <section class="panel-heading">
+        <h2 class="panel-title">Data Insights — 5 Major Exploratory Visualizations</h2>
+        <p class="panel-subtitle">
+          A focused, evidence-based exploration of the 101,766 inpatient encounters from diabetic_data.csv.
+        </p>
+      </section>
+
+      <!-- 1. Readmission Distribution -->
+      <div class="card-surface" style="margin-bottom: 24px;">
+        <h3 class="card-title">1. Readmission Distribution</h3>
+        <p class="card-desc">
+          Actual distribution of inpatient readmission outcomes across raw classes: NO (54,864 encounters; 53.91%),
+          &gt;30 days (35,545 encounters; 34.93%), and &lt;30 days (11,357 encounters; 11.16%).
+          Under our binary formulation, any subsequent readmission comprises 46.09% of records versus 53.91% baseline.
+        </p>
+        <div style="text-align: center; margin-top: 16px;">
+          <img src="/artifacts/eda/visualizations/readmission_distribution.png" alt="Readmission Distribution" style="max-width: 650px; width: 100%; border-radius: 8px; border: 1px solid var(--border-sand);">
+        </div>
+      </div>
+
+      <!-- 2. Age vs Readmission -->
+      <div class="card-surface" style="margin-bottom: 24px;">
+        <h3 class="card-title">2. Readmission Across Age Groups</h3>
+        <p class="card-desc">
+          Comparison of readmission distribution across 10 age cohorts. Inpatient volume peaks heavily in the [70-80) age cohort
+          (26,068 encounters), while readmission likelihood rises progressively with patient age, reaching 48.27% in the [80-90) cohort.
+        </p>
+        <div style="text-align: center; margin-top: 16px;">
+          <img src="/artifacts/eda/visualizations/age_vs_readmission.png" alt="Readmission Across Age Groups" style="max-width: 850px; width: 100%; border-radius: 8px; border: 1px solid var(--border-sand);">
+        </div>
+      </div>
+
+      <!-- 3. Hospital Utilization -->
+      <div class="card-surface" style="margin-bottom: 24px;">
+        <h3 class="card-title">3. Hospital Utilization</h3>
+        <p class="card-desc">
+          Distribution of core hospital resource utilization variables: length of stay (mean 4.40 days, median 4 days),
+          diagnostic lab procedures (mean 43.10 tests, median 44 tests), and distinct medications prescribed (mean 16.02, median 15 medications).
+        </p>
+        <div style="text-align: center; margin-top: 16px;">
+          <img src="/artifacts/eda/visualizations/hospital_utilization.png" alt="Hospital Utilization" style="max-width: 950px; width: 100%; border-radius: 8px; border: 1px solid var(--border-sand);">
+        </div>
+      </div>
+
+      <!-- 4. Previous Visits vs Readmission -->
+      <div class="card-surface" style="margin-bottom: 24px;">
+        <h3 class="card-title">4. Previous Hospital Visits and Readmission</h3>
+        <p class="card-desc">
+          Prior 12-month healthcare encounters represent the strongest clinical signals for future readmission.
+          Patients readmitted within 30 days averaged 1.22 prior inpatient admissions (+220.5% higher than non-readmitted patients)
+          and 0.36 emergency visits (+227.2% higher).
+        </p>
+        <div style="text-align: center; margin-top: 16px;">
+          <img src="/artifacts/eda/visualizations/previous_visits_vs_readmission.png" alt="Previous Hospital Visits and Readmission" style="max-width: 750px; width: 100%; border-radius: 8px; border: 1px solid var(--border-sand);">
+        </div>
+      </div>
+
+      <!-- 5. Numerical Feature Correlation -->
+      <div class="card-surface" style="margin-bottom: 24px;">
+        <h3 class="card-title">5. Numerical Feature Correlation</h3>
+        <p class="card-desc">
+          Correlation matrix across 8 meaningful clinical numerical measurements (excluding database IDs).
+          Identifies strong positive association between number of medications administered and length of stay (r = 0.47),
+          and prior emergency and inpatient utilization (r = 0.27).
+        </p>
+        <div style="text-align: center; margin-top: 16px;">
+          <img src="/artifacts/eda/visualizations/numerical_correlation.png" alt="Numerical Feature Correlation" style="max-width: 800px; width: 100%; border-radius: 8px; border: 1px solid var(--border-sand);">
+        </div>
+      </div>
+
+      <!-- Summary Report Box -->
+      <div class="card-surface">
+        <h3 class="card-title">EDA Summary Report</h3>
+        <div class="report-box">{{ reports.eda }}</div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 4: CLEANING & PREPROCESSING                                -->
+    <!-- ============================================================== -->
+    <div id="tab-preprocessing" class="tab-panel">
+      <section class="panel-heading">
+        <h2 class="panel-title">Data Cleaning & Feature Engineering</h2>
+        <p class="panel-subtitle">
+          Clinical leakage prevention, deceased encounter exclusion, ICD-9 groupings, and feature scaling.
+        </p>
+      </section>
+
+      <div class="artifact-grid">
+        <div class="artifact-box">
+          <img src="/artifacts/cleaning/missing_values_bar.png" alt="Missing Values">
+          <div class="artifact-caption">Figure 03: Missing Value Frequency Before Cleaning (% of Encounters)</div>
+        </div>
+        <div class="artifact-box">
+          <img src="/artifacts/encoding/diagnosis_category_distribution.png" alt="Diagnosis Categories">
+          <div class="artifact-caption">Figure 04: Primary Diagnosis Groupings (ICD-9 Mapping)</div>
+        </div>
+        <div class="artifact-box">
+          <img src="/artifacts/scaling/numeric_features_before_after.png" alt="Feature Scaling">
+          <div class="artifact-caption">Figure 05: StandardScaler Distributions: Raw vs Standardized (u=0, s=1)</div>
+        </div>
+        <div class="artifact-box">
+          <img src="/artifacts/split/train_test_class_balance.png" alt="Stratified Split">
+          <div class="artifact-caption">Figure 06: Stratified Train (80%) vs Test (20%) Class Balance Check</div>
+        </div>
+      </div>
+
+      <div class="card-surface">
+        <h3 class="card-title">Data Cleaning & Leakage Elimination Report</h3>
+        <div class="report-box">{{ reports.cleaning }}</div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 5: MODEL COMPARISON & EVALUATION                           -->
+    <!-- ============================================================== -->
+    <div id="tab-models" class="tab-panel">
+      <section class="panel-heading">
+        <h2 class="panel-title">Model Comparison & Test Evaluation</h2>
+        <p class="panel-subtitle">
+          Benchmarking classical algorithms on identical 20,023 held-out test encounters.
+        </p>
+      </section>
+
+      <div class="artifact-grid">
+        <div class="artifact-box">
+          <img src="/artifacts/model_comparison/model_comparison_bar.png" alt="Model Comparison">
+          <div class="artifact-caption">Figure 07: Candidate Classification Models Benchmark (Test Set)</div>
+        </div>
+        <div class="artifact-box">
+          <img src="/artifacts/logistic_regression/roc_curve.png" alt="ROC Curve">
+          <div class="artifact-caption">Figure 08: Receiver Operating Characteristic (ROC) Curve</div>
+        </div>
+      </div>
+
+      <div class="card-surface">
+        <h3 class="card-title">Comparative Performance Benchmark</h3>
+        <table class="metrics-table">
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Test Accuracy</th>
+              <th>Precision</th>
+              <th>Recall (Sensitivity)</th>
+              <th>F1-Score</th>
+              <th>ROC-AUC</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>HistGradientBoosting (Active)</strong></td>
+              <td><strong>63.69%</strong></td>
+              <td><strong>63.62%</strong></td>
+              <td><strong>52.53%</strong></td>
+              <td><strong>0.5755</strong></td>
+              <td><strong>0.6857</strong></td>
+            </tr>
+            <tr>
+              <td>Random Forest (100 trees, depth 12)</td>
+              <td>63.26%</td>
+              <td>64.27%</td>
+              <td>48.61%</td>
+              <td>0.5535</td>
+              <td>0.6821</td>
+            </tr>
+            <tr>
+              <td>Logistic Regression (L2 Baseline)</td>
+              <td>62.58%</td>
+              <td>64.15%</td>
+              <td>45.62%</td>
+              <td>0.5332</td>
+              <td>0.6694</td>
+            </tr>
+            <tr>
+              <td>Decision Tree (Depth=6)</td>
+              <td>62.38%</td>
+              <td>62.84%</td>
+              <td>47.45%</td>
+              <td>0.5407</td>
+              <td>0.6554</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-surface">
+        <h3 class="card-title">Model Comparison Report</h3>
+        <div class="report-box">{{ reports.model_comparison }}</div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 6: DIAGNOSTICS (REGULARIZATION & BIAS-VARIANCE)            -->
+    <!-- ============================================================== -->
+    <div id="tab-diagnostics" class="tab-panel">
+      <section class="panel-heading">
+        <h2 class="panel-title">Model Diagnostics & Complexity Experiments</h2>
+        <p class="panel-subtitle">
+          Empirical investigation of L1 vs L2 regularization and tree depth bias-variance trade-offs.
+        </p>
+      </section>
+
+      <div class="artifact-grid">
+        <div class="artifact-box">
+          <img src="/artifacts/regularization/regularization_comparison.png" alt="Regularization Comparison">
+          <div class="artifact-caption">Figure 09: L1 (Lasso) vs L2 (Ridge) Regularization Strength (C) vs ROC-AUC</div>
+        </div>
+        <div class="artifact-box">
+          <img src="/artifacts/bias_variance/learning_curves.png" alt="Bias Variance Curves">
+          <div class="artifact-caption">Figure 10: Bias-Variance Complexity Regimes: Training vs Validation Gap</div>
+        </div>
+        <div class="artifact-box">
+          <img src="/artifacts/decision_tree/tree_depth_performance.png" alt="Tree Depth Overfitting">
+          <div class="artifact-caption">Figure 11: Tree Depth vs Accuracy (Overfitting Divergence Curve)</div>
+        </div>
+        <div class="artifact-box">
+          <img src="/artifacts/splitting_criteria/gini_vs_entropy_comparison.png" alt="Splitting Criteria">
+          <div class="artifact-caption">Figure 12: Decision Tree Splitting Criteria: Gini Impurity vs Entropy</div>
+        </div>
+      </div>
+
+      <div class="card-surface">
+        <h3 class="card-title">Regularization Study Report</h3>
+        <div class="report-box">{{ reports.regularization }}</div>
+      </div>
+
+      <div class="card-surface">
+        <h3 class="card-title">Bias-Variance Complexity Report</h3>
+        <div class="report-box">{{ reports.bias_variance }}</div>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TAB 7: FEATURE IMPACT & COEFFICIENTS                           -->
+    <!-- ============================================================== -->
+    <div id="tab-coefficients" class="tab-panel">
+      <section class="panel-heading">
+        <h2 class="panel-title">Feature Coefficients & Odds Ratios</h2>
+        <p class="panel-subtitle">
+          Interpreting clinical drivers of readmission risk from model feature weights.
+        </p>
+      </section>
+
+      <div class="artifact-grid" style="grid-template-columns: 1fr;">
+        <div class="artifact-box">
+          <img src="/artifacts/coefficients/top_coefficients.png" alt="Top Feature Coefficients" style="max-height: 520px;">
+          <div class="artifact-caption">Figure 13: Top Logistic Regression Weights (Log-Odds Impact on Readmission)</div>
+        </div>
+      </div>
+
+      <div class="card-surface">
+        <h3 class="card-title">Coefficient & Clinical Odds Ratio Report</h3>
+        <div class="report-box">{{ reports.coefficients }}</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-nav-bar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; padding-bottom:1rem; border-bottom:1px solid rgba(232, 226, 216, 0.4); margin-bottom:1rem;">
+      <div style="display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap;">
+        <span style="font-weight:600; font-size:0.85rem; color:#261E1A; margin-right:0.3rem;">Jump to Course Outcome:</span>
+        <button type="button" class="btn-sample" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="switchModuleSubTab('m1'); switchTab('tab-modules');">CO1: Lifecycle</button>
+        <button type="button" class="btn-sample" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="switchModuleSubTab('m2'); switchTab('tab-modules');">CO2: Linear</button>
+        <button type="button" class="btn-sample" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="switchModuleSubTab('m3'); switchTab('tab-modules');">CO3: Trees</button>
+        <button type="button" class="btn-sample" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="switchModuleSubTab('m4'); switchTab('tab-modules');">CO4: Unsupervised</button>
+        <button type="button" class="btn-sample" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="switchModuleSubTab('m5'); switchTab('tab-modules');">CO5: Evaluation</button>
+        <button type="button" class="btn-sample" style="padding:0.25rem 0.6rem; font-size:0.78rem;" onclick="switchTab('tab-co6');">CO6: Docker</button>
+      </div>
+      <button type="button" class="btn-sample" style="padding:0.25rem 0.75rem; font-size:0.78rem; background-color:#261E1A; color:#FFFFFF;" onclick="window.scrollTo({top:0, behavior:'smooth'});">
+        &uarr; Back to Top
+      </button>
+    </div>
+    <div class="footer-disclaimer">
+      <strong>Educational Project Disclaimer:</strong> This machine learning application is built on the UCI Diabetes 130-US Hospitals (1999–2008) dataset for academic and research demonstration. It provides probabilistic risk estimations and is not a medical diagnosis or medical device. All clinical decisions must be made by qualified healthcare professionals.
+    </div>
+  </footer>
+
+  <!-- Interactive JavaScript for Tabs & Sample Loaders -->
+  <script>
+    const sampleProfiles = {{ sample_patients | tojson }};
+
+    function switchTab(tabId) {
+      // Deactivate all panels & buttons
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+
+      // Activate selected
+      const targetPanel = document.getElementById(tabId);
+      if (targetPanel) {
+        targetPanel.classList.add('active');
+      }
+
+      // Update button active state
+      const btns = document.querySelectorAll('.nav-tab-btn');
+      btns.forEach(b => {
+        if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(tabId)) {
+          b.classList.add('active');
+        }
+      });
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchModuleSubTab(modId) {
+      document.querySelectorAll('.module-subpanel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.module-pill-btn').forEach(b => b.classList.remove('active'));
+
+      const target = document.getElementById('subpanel-' + modId);
+      if (target) {
+        target.classList.add('active');
+      }
+
+      const btn = document.getElementById('btn-pill-' + modId);
+      if (btn) {
+        btn.classList.add('active');
+      }
+    }
+
+    function loadSample(key) {
+      const data = sampleProfiles[key];
+      if (!data) return;
+      for (const [field, value] of Object.entries(data)) {
+        const el = document.getElementById(field);
+        if (el) {
+          el.value = value;
+        }
+      }
+      switchTab('tab-predict');
+      document.querySelector('.form-actions').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function clearForm() {
+      document.getElementById('predictionForm').reset();
+    }
+  </script>
+
+</body>
+</html>

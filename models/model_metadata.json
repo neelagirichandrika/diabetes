@@ -1,0 +1,110 @@
+{
+  "model_name": "HistGradientBoosting",
+  "trained_timestamp": "2026-09-17T18:56:47.909088",
+  "random_state": 42,
+  "dataset_shape": [
+    100111,
+    22
+  ],
+  "train_samples": 80088,
+  "test_samples": 20023,
+  "target_column": "readmitted",
+  "target_definition": "Binary: 0 = Not Readmitted ('NO'), 1 = Readmitted ('>30' or '<30')",
+  "prediction_timepoint": "Inpatient discharge planning / preparation stage",
+  "numeric_features": [
+    "time_in_hospital",
+    "num_lab_procedures",
+    "num_procedures",
+    "num_medications",
+    "number_outpatient",
+    "number_emergency",
+    "number_inpatient",
+    "number_diagnoses"
+  ],
+  "categorical_features": [
+    "gender",
+    "age",
+    "admission_type",
+    "admission_source",
+    "primary_diagnosis",
+    "diabetes_diagnosed",
+    "max_glu_serum",
+    "A1Cresult",
+    "metformin",
+    "glipizide",
+    "glyburide",
+    "insulin",
+    "change",
+    "diabetesMed"
+  ],
+  "final_metrics": {
+    "Accuracy": 0.6369,
+    "Precision": 0.6362,
+    "Recall": 0.5253,
+    "F1_Score": 0.5755,
+    "ROC_AUC": 0.6857,
+    "Confusion_Matrix": [
+      [
+        7824,
+        2818
+      ],
+      [
+        4453,
+        4928
+      ]
+    ]
+  },
+  "all_model_comparisons": {
+    "Logistic Regression": {
+      "Accuracy": 0.6258,
+      "Precision": 0.6415,
+      "Recall": 0.4562,
+      "F1_Score": 0.5332,
+      "ROC_AUC": 0.6694,
+      "Confusion_Matrix": [
+        [
+          8250,
+          2392
+        ],
+        [
+          5101,
+          4280
+        ]
+      ]
+    },
+    "Random Forest": {
+      "Accuracy": 0.6326,
+      "Precision": 0.6427,
+      "Recall": 0.4861,
+      "F1_Score": 0.5535,
+      "ROC_AUC": 0.6821,
+      "Confusion_Matrix": [
+        [
+          8107,
+          2535
+        ],
+        [
+          4821,
+          4560
+        ]
+      ]
+    },
+    "HistGradientBoosting": {
+      "Accuracy": 0.6369,
+      "Precision": 0.6362,
+      "Recall": 0.5253,
+      "F1_Score": 0.5755,
+      "ROC_AUC": 0.6857,
+      "Confusion_Matrix": [
+        [
+          7824,
+          2818
+        ],
+        [
+          4453,
+          4928
+        ]
+      ]
+    }
+  }
+}

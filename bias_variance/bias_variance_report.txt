@@ -1,0 +1,9 @@
+============================================================
+DIABETES READMISSION — BIAS-VARIANCE EXPERIMENT REPORT
+============================================================
+                                                 Diagnosis  Training Score (%)  Validation Score (%)  Generalization Gap (%)
+Model Complexity                                                                                                            
+Shallow Tree (Depth 2)            High Bias (Underfitting)               61.38                 61.64                   -0.26
+Moderate Tree (Depth 6)                    Balanced Regime               62.69                 62.25                    0.43
+Deep Tree (Depth 12)                     Moderate Variance               66.57                 60.89                    5.68
+Unconstrained Tree (Depth 22)  High Variance (Overfitting)               86.74                 57.03                   29.71

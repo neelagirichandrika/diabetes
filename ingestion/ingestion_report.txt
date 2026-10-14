@@ -1,0 +1,18 @@
+============================================================
+DIABETES HOSPITAL READMISSION PREDICTION — INGESTION REPORT
+============================================================
+Raw Data File:              C:\Users\Administrator\Desktop\diabetes data project\data\raw\diabetic_data.csv
+ID Mapping File:            C:\Users\Administrator\Desktop\diabetes data project\data\raw\IDS_mapping.csv
+Total Records (Encounters): 101,766
+Total Feature Columns:      50
+Memory Footprint:           192.87 MB
+Data Dictionary Path:       C:\Users\Administrator\Desktop\diabetes data project\ingestion\data_dictionary.csv
+
+Target Column:              readmitted
+Raw Value Counts:
+readmitted
+NO     54864
+>30    35545
+<30    11357
+
+Ingestion completed successfully.

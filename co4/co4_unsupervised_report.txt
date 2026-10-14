@@ -1,0 +1,34 @@
+=================================================================
+COURSE OUTCOME 4 (CO4): UNSUPERVISED LEARNING & PCA AUDIT
+=================================================================
+Status:                 CERTIFIED OPERATIONAL
+Curriculum Mapping:     Module 4 — Unsupervised Learning
+
+1. FEATURE STANDARDIZATION
+  - Features:           time_in_hospital, num_lab_procedures, num_procedures, num_medications, number_outpatient, number_emergency, number_inpatient, number_diagnoses
+  - Scaling Method:     StandardScaler (mean=0, variance=1)
+    * Rationale: Without standardization, high-variance counts (lab procedures 1-132) dwarf low-range indicators (prior inpatient visits 0-21).
+
+2. K-MEANS ELBOW & SILHOUETTE EVALUATION
+  - K = 2: Inertia =    673,218.0 | Silhouette = 0.2075
+  - K = 3: Inertia =    605,119.4 | Silhouette = 0.2038
+  - K = 4: Inertia =    545,806.4 | Silhouette = 0.1651
+  - K = 5: Inertia =    501,172.2 | Silhouette = 0.1752
+  - Optimal Clinical Clusters: K = 3 (Distinct clinical phenotype separation)
+
+3. PRINCIPAL COMPONENT ANALYSIS (PCA)
+  - PC1 Variance Explained: 25.30% (Procedure & Inpatient Intensity Axis)
+  - PC2 Variance Explained: 17.15% (Prior Year Healthcare Utilization Axis)
+  - Cumulative 2-Component Variance: 42.45%
+
+4. DISCOVERED CLINICAL PHENOTYPES
+  - Phenotype 0 (60.7% of cohort | Readmission Rate: 41.9%):
+    * Description: Low-Acuity / Brief Inpatient Stay (Short duration, low medications, low prior utilization)
+  - Phenotype 1 (8.9% of cohort | Readmission Rate: 74.5%):
+    * Description: Chronic Utilization / ER Recidivism (Frequent prior emergency & inpatient visits)
+  - Phenotype 2 (30.5% of cohort | Readmission Rate: 48.5%):
+    * Description: High-Acuity / Complex Polypharmacy (Prolonged stay, high procedure count, intensive labs)
+
+=================================================================
+CO4 UNSUPERVISED LEARNING IMPLEMENTATION COMPLETED SUCCESSFULLY
+=================================================================

@@ -1,0 +1,11 @@
+============================================================
+DIABETES READMISSION — LOGISTIC REGRESSION BASELINE
+============================================================
+Accuracy:  62.58%
+Precision: 64.15%
+Recall:    45.62%
+F1-Score:  0.5332
+ROC-AUC:   0.6694
+
+Confusion Matrix:
+TN=8250, FP=2392, FN=5101, TP=4280

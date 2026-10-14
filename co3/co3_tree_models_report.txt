@@ -1,0 +1,24 @@
+=================================================================
+COURSE OUTCOME 3 (CO3): TREE-BASED ENSEMBLES & SPLITTING AUDIT
+=================================================================
+Status:                 CERTIFIED OPERATIONAL
+Curriculum Mapping:     Module 3 — Tree-Based Models
+
+1. SPLITTING CRITERIA BENCHMARK (DEPTH 6 CART)
+  - Gini Impurity (2*p0*p1):      Accuracy = 62.25% | ROC-AUC = 0.6579
+  - Shannon Entropy (-sum p*log2(p)): Accuracy = 62.15% | ROC-AUC = 0.6580
+    * Finding: Both criteria select nearly identical optimal thresholds across inpatient features.
+
+2. TREE DEPTH PROGRESSION & OVERFITTING DYNAMICS
+  - Optimal Constrained Depth: Depth 6 (Generalization Peak)
+  - Severe Overfitting Warning: At Depth 16, Training Accuracy inflates to 73.28% while Test Accuracy collapses to 59.88%.
+    * Rationale: High-depth trees split down to single-patient leaves, memorizing noise.
+
+3. ENSEMBLE BENCHMARK & SELECTED ESTIMATOR
+  - Random Forest (100 Trees):   Accuracy = 63.26% | ROC-AUC = 0.6821
+  - HistGradientBoosting (BEST): Accuracy = 63.69% | ROC-AUC = 0.6857
+    * Selected Algorithm: HistGradientBoosting provides fastest sub-millisecond inference and highest clinical ROC-AUC.
+
+=================================================================
+CO3 TREE-BASED MODELS IMPLEMENTATION COMPLETED SUCCESSFULLY
+=================================================================

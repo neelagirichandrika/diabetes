@@ -1,0 +1,41 @@
+# ==============================================================================
+# .dockerignore: Diabetic Inpatient Readmission Prediction Service
+# Excludes unnecessary build artifacts, caches, virtual environments, and raw data
+# ==============================================================================
+
+# Git version control metadata
+.git/
+.gitignore
+.gitattributes
+
+# IDE & Editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python bytecode & runtime caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Raw large datasets (not required for serving trained model; saves ~20MB image context)
+data/raw/diabetic_data.csv
+data/raw/IDS_mapping.csv
+diabetic_data.csv
+IDS_mapping.csv
+
+# Temporary build scripts and logs
+*.log
+scratch/
+.system_generated/

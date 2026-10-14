@@ -1,0 +1,20 @@
+============================================================
+DIABETES READMISSION — SPLITTING CRITERIA EXPERIMENT
+============================================================
+Investigating Decision Tree Splitting Criteria:
+  1. Gini Impurity: G = 1 - sum(p_i^2)
+  2. Entropy / Log-Loss: H = - sum(p_i * log2(p_i))
+
+Experimental Results (max_depth=6):
+           Accuracy  F1_Score  ROC_AUC  Train_Time_s
+Criterion                                           
+GINI          62.25    0.5549   0.6579          0.93
+ENTROPY       62.15    0.5453   0.6580          1.05
+LOG_LOSS      62.15    0.5453   0.6580          1.06
+
+Findings:
+- Gini Impurity and Entropy achieve nearly identical ROC-AUC on this dataset.
+- Gini executes faster computationally because it avoids logarithmic operations.
+- Gini impurity is retained as default for tree-based experiments.
+
+Plot saved to: C:\Users\Administrator\Desktop\diabetes data project\splitting_criteria\gini_vs_entropy_comparison.png

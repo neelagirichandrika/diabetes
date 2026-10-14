@@ -1,0 +1,11 @@
+============================================================
+DIABETES READMISSION — TRAIN / TEST SPLIT REPORT
+============================================================
+Total Clean Encounters: 100,111
+Training Samples:       80,088 (80.0%)
+Testing Samples:        20,023 (20.0%)
+Random Seed:            42
+
+Class Proportions:
+Train: 0=53.15%, 1=46.85%
+Test:  0=53.15%, 1=46.85%

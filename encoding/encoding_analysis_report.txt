@@ -1,0 +1,80 @@
+============================================================
+DIABETES READMISSION — CATEGORICAL ENCODING REPORT
+============================================================
+Total Categorical Features:   14
+One-Hot Encoded Dimensions:   60
+Total Transformed Dimensions: 68
+
+Diagnosis Group Distribution:
+primary_diagnosis
+Circulatory        29880
+Other              17908
+Respiratory        14074
+Digestive           9380
+Diabetes            8693
+Injury              6879
+Genitourinary       5054
+Musculoskeletal     4944
+Neoplasms           3299
+
+All Encoded Features:
+0                               gender_Female
+1                                 gender_Male
+2                                  age_[0-10)
+3                                 age_[10-20)
+4                                 age_[20-30)
+5                                 age_[30-40)
+6                                 age_[40-50)
+7                                 age_[50-60)
+8                                 age_[60-70)
+9                                 age_[70-80)
+10                                age_[80-90)
+11                               age_[90-100)
+12                    admission_type_Elective
+13                   admission_type_Emergency
+14         admission_type_Other/Not Available
+15                      admission_type_Urgent
+16           admission_source_Clinic Referral
+17            admission_source_Emergency Room
+18             admission_source_Other/Unknown
+19        admission_source_Physician Referral
+20    admission_source_Transfer from Facility
+21              primary_diagnosis_Circulatory
+22                 primary_diagnosis_Diabetes
+23                primary_diagnosis_Digestive
+24            primary_diagnosis_Genitourinary
+25                   primary_diagnosis_Injury
+26          primary_diagnosis_Musculoskeletal
+27                primary_diagnosis_Neoplasms
+28                    primary_diagnosis_Other
+29              primary_diagnosis_Respiratory
+30                      diabetes_diagnosed_No
+31                     diabetes_diagnosed_Yes
+32                         max_glu_serum_>200
+33                         max_glu_serum_>300
+34                         max_glu_serum_Norm
+35                      max_glu_serum_Unknown
+36                               A1Cresult_>7
+37                               A1Cresult_>8
+38                             A1Cresult_Norm
+39                          A1Cresult_Unknown
+40                             metformin_Down
+41                               metformin_No
+42                           metformin_Steady
+43                               metformin_Up
+44                             glipizide_Down
+45                               glipizide_No
+46                           glipizide_Steady
+47                               glipizide_Up
+48                             glyburide_Down
+49                               glyburide_No
+50                           glyburide_Steady
+51                               glyburide_Up
+52                               insulin_Down
+53                                 insulin_No
+54                             insulin_Steady
+55                                 insulin_Up
+56                                  change_Ch
+57                                  change_No
+58                             diabetesMed_No
+59                            diabetesMed_Yes

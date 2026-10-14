@@ -1,0 +1,32 @@
+=================================================================
+COURSE OUTCOME 2 (CO2): LINEAR MODELS & REGULARIZATION AUDIT
+=================================================================
+Status:                 CERTIFIED OPERATIONAL
+Curriculum Mapping:     Module 2 — Linear Models at Depth
+
+1. BASELINE REGULARIZED LOGISTIC REGRESSION (RIDGE / L2)
+  - Optimization Solver: L-BFGS Quasi-Newton
+  - Regularization Penalty: L2 (Ridge, C=1.0)
+  - Accuracy:           62.58%
+  - ROC-AUC:            0.6694
+  - Precision:          64.15%
+  - Clinical Recall:    45.62%
+  - F1-Score:           0.5332
+
+2. TOP CLINICAL RISK FACTORS (ODDS RATIO > 1.0)
+  - number_inpatient                : beta=+0.4841 | OR = 1.623x
+  - admission_type_Other/Not Available: beta=+0.2867 | OR = 1.332x
+  - admission_source_Emergency Room : beta=+0.2679 | OR = 1.307x
+  - age_[70-80)                     : beta=+0.2591 | OR = 1.296x
+  - age_[80-90)                     : beta=+0.2336 | OR = 1.263x
+
+3. TOP CLINICAL PROTECTIVE FACTORS (ODDS RATIO < 1.0)
+  - diabetesMed_No                  : beta=-0.2258 | OR = 0.798x
+  - primary_diagnosis_Neoplasms     : beta=-0.3574 | OR = 0.700x
+  - admission_type_Trauma Center    : beta=-0.3973 | OR = 0.672x
+  - admission_source_Transfer from Facility: beta=-0.4393 | OR = 0.645x
+  - age_[0-10)                      : beta=-0.8250 | OR = 0.438x
+
+=================================================================
+CO2 LINEAR MODELS IMPLEMENTATION COMPLETED SUCCESSFULLY
+=================================================================

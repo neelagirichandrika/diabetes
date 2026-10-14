@@ -1,0 +1,20 @@
+============================================================
+DIABETES READMISSION — DATA CLEANING REPORT
+============================================================
+Original Shape:            (101766, 50)
+Final Cleaned Shape:       (100111, 43)
+Records Removed:           1,655
+  - Deceased Patients:     1,652 (IDs 11, 19, 20, 21)
+  - Invalid Gender:        3 encounters ('Unknown/Invalid')
+
+Removed Columns:
+  - encounter_id: Database transaction identifier; risks memorization.
+  - patient_nbr: Patient tracking ID; prevents multi-encounter leakage.
+  - weight: 96.86% missing data; non-viable for clinical modeling.
+  - payer_code: 39.56% missing administrative billing data.
+  - medical_specialty: 49.08% missing; high cardinality physician specialty.
+  - examide: Constant column (100% 'No', zero variance).
+  - citoglipton: Constant column (100% 'No', zero variance).
+  - discharge_disposition_id (expired cases): Filtered 1,652 deceased encounters (readmission is impossible)
+
+Missing Value Plot:        C:\Users\Administrator\Desktop\diabetes data project\cleaning\missing_values_bar.png

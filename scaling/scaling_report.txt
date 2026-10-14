@@ -1,0 +1,23 @@
+============================================================
+DIABETES READMISSION — FEATURE SCALING REPORT
+============================================================
+Method: StandardScaler (z = (x - mean) / std)
+
+Comparison Table:
+                    Mean (Raw)  Std (Raw)  Mean (Scaled)  Std (Scaled)  Min (Scaled)  Max (Scaled)
+time_in_hospital          4.39       2.97            0.0           1.0         -1.14          3.23
+num_lab_procedures       42.94      19.62            0.0           1.0         -2.14          4.54
+num_procedures            1.33       1.70           -0.0           1.0         -0.78          2.75
+num_medications          15.98       8.09            0.0           1.0         -1.85          8.03
+number_outpatient         0.37       1.26           -0.0           1.0         -0.29         32.94
+number_emergency          0.20       0.94            0.0           1.0         -0.21         81.02
+number_inpatient          0.63       1.26           -0.0           1.0         -0.50         16.14
+number_diagnoses          7.41       1.94            0.0           1.0         -3.31          4.43
+
+Scaled Preview:
+   time_in_hospital  num_lab_procedures  num_procedures  num_medications  number_outpatient  number_emergency  number_inpatient  number_diagnoses
+0         -1.139579           -0.099057       -0.782634        -1.851322          -0.292274         -0.212004         -0.501527         -3.306688
+1         -0.467197            0.818341       -0.782634         0.249390          -0.292274         -0.212004         -0.501527          0.820735
+2         -0.803388           -1.628055        2.158090        -0.368466           1.289983         -0.212004          0.290966         -0.727048
+3         -0.803388            0.053842       -0.194489         0.002248          -0.292274         -0.212004         -0.501527         -0.211121
+4         -1.139579            0.410609       -0.782634        -0.986323          -0.292274         -0.212004         -0.501527         -1.242976

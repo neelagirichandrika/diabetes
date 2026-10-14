@@ -1,0 +1,8 @@
+============================================================
+DIABETES READMISSION — PIPELINE REPORT
+============================================================
+Target Artifact:     C:\Users\Administrator\Desktop\diabetes data project\models\diabetes_pipeline.joblib
+File Size:           0.36 MB
+Preprocessing:       ColumnTransformer (StandardScaler + OneHotEncoder)
+Model Attached:      HistGradientBoostingClassifier
+Status:              VERIFIED OPERATIONAL

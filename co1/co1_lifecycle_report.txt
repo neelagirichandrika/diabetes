@@ -1,0 +1,32 @@
+=================================================================
+COURSE OUTCOME 1 (CO1): CLINICAL ML LIFECYCLE & HYGIENE AUDIT
+=================================================================
+Status:                 CERTIFIED OPERATIONAL
+Curriculum Mapping:     Module 1 — ML Lifecycle & System Engineering
+
+1. RAW DATA INGESTION
+  - Raw Dataset:        C:\Users\Administrator\Desktop\diabetes data project\data\raw\diabetic_data.csv
+  - Total Inpatient Rows: 101,766
+  - Raw Attributes:     50 columns
+
+2. CLINICAL LEAKAGE & HYGIENE CONTROLS
+  - Deceased Encounters Filtered: 1,652 (Discharge IDs 11, 19, 20, 21)
+    * Rationale: Deceased patients cannot be readmitted (100% readmitted=NO). Retaining them creates spurious negative correlation.
+  - Transaction Identifier Exclusion: encounter_id, patient_nbr removed to prevent ID memorization.
+  - Sparse Column Removal: weight (96.86% missing) and payer_code removed.
+  - Zero-Variance Elimination: examide, citoglipton dropped.
+
+3. CLEANED DATASET & TARGET FORMULATION
+  - File Path:          C:\Users\Administrator\Desktop\diabetes data project\data\processed\diabetes_clean.csv
+  - Valid Encounters:   100,111
+  - Features Consumed:  22 clinical attributes (8 numerical, 14 categorical)
+  - Target Definition:  Binary readmission (0 = No Readmission [53.15%], 1 = Readmission [46.85%])
+
+4. STRATIFIED DATA PARTITIONING
+  - Split Strategy:     Stratified 80/20 train/test partition (Zero Data Leakage)
+  - Training Set:       80,089 encounters (80.0%)
+  - Hold-out Test Set:  20,022 encounters (20.0%) [Locked Vault]
+
+=================================================================
+CO1 LIFECYCLE IMPLEMENTATION COMPLETED SUCCESSFULLY
+=================================================================

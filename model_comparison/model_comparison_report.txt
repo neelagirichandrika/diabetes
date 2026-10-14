@@ -1,0 +1,8 @@
+============================================================
+DIABETES READMISSION — MODEL COMPARISON BENCHMARK
+============================================================
+               Model Accuracy Precision Recall     F1 ROC-AUC
+ Logistic Regression   62.58%    64.15% 45.62% 0.5332  0.6694
+       Decision Tree   62.25%    61.99% 50.23% 0.5549  0.6579
+       Random Forest   63.26%    64.27% 48.61% 0.5535  0.6821
+HistGradientBoosting   63.69%    63.62% 52.53% 0.5755  0.6857
